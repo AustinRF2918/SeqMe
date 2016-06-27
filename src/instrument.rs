@@ -1,4 +1,4 @@
-mod Instrument
+pub mod Instrument
 {
     use note::Note;
 
@@ -13,11 +13,11 @@ pub mod InstrumentWrapper
     use note::Note;
     use instrument::Instrument;
     
-    
     ///T represents an implemented instrument that has the play
     ///function: The play function returns an Option<???> which
     ///at a later point will be able to unwrap to modify portions
     ///of metadata in the Sequence or PartialSequence.
+    #[derive(Copy, Clone)]
     pub struct InstrumentWrapper<T: Instrument::PlayableInstrument>
     {
         internal_instrument: T,
@@ -61,30 +61,32 @@ pub mod InstrumentWrapper
 
 pub mod TestPlugin
 {
+    use std::thread;
     use note::Note;
     use instrument::Instrument;
     use ears::{Sound, AudioController};
-    use schedule_recv::periodic_ms;
+    use schedule_recv::oneshot_ms;
+    use std::sync::Mutex;
 
     pub struct TestSampler
     {
         internal_audio: Sound,
         audio_scaler: f32,
+        cache: f32,
     }
 
     impl Instrument::PlayableInstrument for TestSampler
     {
         fn play(&mut self, note: &Note::Note)
         {
-            let local_timer = periodic_ms(note.length.unwrap());
-            self.internal_audio.set_pitch(note.pitch_hz * 0.0015 * 8.0 * self.audio_scaler);
-            self.internal_audio.play();
-            while self.internal_audio.is_playing()
+            if self.cache != note.pitch_hz * 0.0015 * 8.0 * self.audio_scaler
             {
-                local_timer.recv().unwrap();
-                break;
+                self.internal_audio.set_pitch(note.pitch_hz * 0.0015 * 8.0 * self.audio_scaler);
             }
+            self.play_core(&note);
         }
+
+        
     }
 
     impl TestSampler
@@ -99,12 +101,25 @@ pub mod TestPlugin
                     Some(TestSampler{
                         internal_audio: data,
                         audio_scaler: 1.0,
+                        cache: 0f32,
                     })
                 },
                 None => {
                     None
                 }
             }
+        }
+
+        fn play_core(&mut self, note: &Note::Note)
+        {
+            let local_timer = oneshot_ms(note.length.unwrap());
+            if self.internal_audio.is_playing()
+            {
+                self.internal_audio.set_position([0f32, 0f32, 0f32]);
+            }
+            self.internal_audio.play();
+            local_timer.recv().unwrap();
+            self.internal_audio.stop();
         }
 
         pub fn change_pitch(&mut self, value: f32)

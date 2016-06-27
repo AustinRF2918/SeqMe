@@ -1,42 +1,88 @@
-use std::sync::{Arc, Mutex};
-use std::thread;
-use std::sync::mpsc;
-use std::sync::mpsc::{Sender, Receiver};
-
 extern crate ears;
 extern crate schedule_recv;
 
 mod note;
 mod instrument;
+mod timing;
+mod partialsequencer;
 
 use note::Note;
 use instrument::{InstrumentWrapper, TestPlugin};
+use timing::Beat::BeatValue;
+use partialsequencer::PartialSequencer;
+use std::thread;
 
 fn main() {
-    let sequence = Note::build_sequence("B:B:C:C:C:DS:DS:C");
+    let internal_beat = BeatValue::from_bpm(130.0);
 
-    let mut sampler = InstrumentWrapper::InstrumentWrapper::new(TestPlugin::TestSampler::from_audio("../debug/sampe7.wav").unwrap());
-    sampler.reveal_internal_instrument().change_pitch(0.3);
-
-    let mut nb = Note::NoteBuilder::new();
-    nb.set_note(Note::NotePitch::B);
-    nb = nb.length((200.0) as u32);
+    let mut children = vec![];
 
 
+    children.push(thread::spawn(move || {
+    let mut nb_seq1 = Note::NoteBuilder::new();
+    nb_seq1 = nb_seq1.length(internal_beat.u64_from_beats(8, 16).unwrap() as u32);
+    let sequence = Note::build_sequence("E:E:D:A:E:E:D:A:E:E:D:A:E:E:D:A");
+    let mut sampler = InstrumentWrapper::InstrumentWrapper::new(TestPlugin::TestSampler::from_audio("../debug/pianoc.aiff").unwrap());
+    sampler.reveal_internal_instrument().change_pitch(0.28);
     let note_sequence : Vec<Note::Note>= sequence.into_iter().map(|x|{
-        let mut temp = nb.clone();
-        temp.set_note(x);
-        temp.safe_build()
+        nb_seq1.set_note(x);
+        nb_seq1.safe_build()
     }).collect();
-
-    thread::spawn(move ||
-    {
-        for i in note_sequence.clone().into_iter()
+        for i in note_sequence
         {
-            sampler.safe_play(&i);
+            sampler.play(&i);
         }
-    })
+    }));
 
+    children.push(thread::spawn(move || {
+    let mut nb_seq1 = Note::NoteBuilder::new();
+    nb_seq1 = nb_seq1.length(internal_beat.u64_from_beats(4, 8).unwrap() as u32);
+    let sequence = Note::build_sequence("E:E:E:E:E:E:E:E:E:E:E:E:E:E:E:E");
+    let mut sampler = InstrumentWrapper::InstrumentWrapper::new(TestPlugin::TestSampler::from_audio("../debug/clap.wav").unwrap());
+    sampler.reveal_internal_instrument().change_pitch(0.3);
+    let note_sequence : Vec<Note::Note>= sequence.into_iter().map(|x|{
+        nb_seq1.set_note(x);
+        nb_seq1.safe_build()
+    }).collect();
+        for i in note_sequence
+        {
+            sampler.play(&i);
+        }
+    }));
 
+    children.push(thread::spawn(move || {
+    let mut nb_seq1 = Note::NoteBuilder::new();
+    nb_seq1 = nb_seq1.length(internal_beat.u64_from_beats(4, 4).unwrap() as u32);
+    let sequence = Note::build_sequence("A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A");
+    let mut sampler = InstrumentWrapper::InstrumentWrapper::new(TestPlugin::TestSampler::from_audio("../debug/bass.wav").unwrap());
+    sampler.reveal_internal_instrument().change_pitch(0.3);
+    let note_sequence : Vec<Note::Note>= sequence.into_iter().map(|x|{
+        nb_seq1.set_note(x);
+        nb_seq1.safe_build()
+    }).collect();
+        for i in note_sequence
+        {
+            sampler.play(&i);
+        }
+    }));
+
+    children.push(thread::spawn(move || {
+    let mut nb_seq1 = Note::NoteBuilder::new();
+    nb_seq1 = nb_seq1.length(internal_beat.u64_from_beats(8, 2).unwrap() as u32);
+    let sequence = Note::build_sequence("A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A");
+    let mut sampler = InstrumentWrapper::InstrumentWrapper::new(TestPlugin::TestSampler::from_audio("../debug/hats.wav").unwrap());
+    sampler.reveal_internal_instrument().change_pitch(0.35);
+    let note_sequence : Vec<Note::Note>= sequence.into_iter().map(|x|{
+        nb_seq1.set_note(x);
+        nb_seq1.safe_build()
+    }).collect();
+        for i in note_sequence
+        {
+            sampler.play(&i);
+        }
+    }));
+    for i in children{
+        let x = i.join();
+    }
 }
 
