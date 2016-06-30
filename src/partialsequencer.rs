@@ -7,7 +7,7 @@ pub mod PartialSequencer
 
     pub struct PartialSequencer<T: Instrument::PlayableInstrument>
     {
-        internal_beat: BeatValue,
+        local_beat_builder: BeatValue,
         local_note_builder: Note::NoteBuilder,
         instrument: InstrumentWrapper::InstrumentWrapper<T>,
         note_hash: HashMap<u64, Note::Note>
@@ -36,12 +36,23 @@ pub mod PartialSequencer
             self.note_hash.insert(self.internal_beat.u64_from_beats(bar, bar_divisions).unwrap(), note);
         }
 
-        pub fn push_time_to_note_from_str(&mut self, bar: u64, bar_divisions: u64, s: &str)
+        pub fn push_time_to_note_from_str(&mut self, s : &str)
         {
             let x: Vec<&str> = s.split(":").collect();
-            if x.len() != 3
+
+            if x.len() != 5
             {
                 panic!("Corrupted note meta data.")
+            }
+            else
+            {
+                let bar_precision = x.iter().nth(0).unwrap();
+                let bar = x.iter().nth(1).unwrap();
+                let bar_subdivision = x.iter().nth(2).unwrap();
+                let note_pitch = x.iter().nth(3).unwrap();
+                let note_octave = x.iter().nth(4).unwrap();
+
+                let note = self.local_note_builder.from_str(*note_pitch + "/" + *note_octave);
             }
         }
     }

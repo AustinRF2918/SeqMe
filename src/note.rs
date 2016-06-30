@@ -83,6 +83,7 @@ pub mod Note{
 
     impl NoteBuilder
     {
+
         pub fn new() -> NoteBuilder
         {
             NoteBuilder{
@@ -94,6 +95,47 @@ pub mod Note{
         {
             self.internal_note.pitch = p;
             self.internal_note.pitch_hz = hz_from_pitch(p, Register::C4);
+        }
+
+        pub fn from_str(&mut self, s: &str) -> Option<Note>
+        {
+            let x: Vec<&str> = s.split("/").collect();
+            let temp = self;
+
+            if x.len() != 2
+            {
+                panic!("Invalid string parsed 'from_str'");
+            }
+            else
+            {
+                match *x.iter().nth(0).unwrap(){
+                        "C" => {},
+                        "CS" => {temp.set_note(NotePitch::CSharp)},
+                        "D" => {temp.set_note(NotePitch::D)},
+                        "DS" => {temp.set_note(NotePitch::DSharp)},
+                        "E" => {temp.set_note(NotePitch::E)},
+                        "F" => {temp.set_note(NotePitch::F)},
+                        "FS" => {temp.set_note(NotePitch::FSharp)},
+                        "G" => {temp.set_note(NotePitch::G)},
+                        "GS" => {temp.set_note(NotePitch::GSharp)},
+                        "A" => {temp.set_note(NotePitch::A)},
+                        "AS" => {temp.set_note(NotePitch::ASharp)},
+                        "B" => {temp.set_note(NotePitch::B)},
+                        _ => {panic!("Invalid string parsed 'from_str'")},
+                };
+
+                match *x.iter().nth(1).unwrap(){
+                    "C0" => {temp.register(Register::C0)},
+                    "C1" => {temp.register(Register::C1)},
+                    "C2" => {temp.register(Register::C2)},
+                    "C3" => {temp.register(Register::C3)},
+                    "C4" => {temp.register(Register::C4)},
+                    "C5" => {temp.register(Register::C5)},
+                    _ => {panic!("Invalid string parsed 'from_str'")},
+                }
+            };
+
+            Some(temp.safe_build())
         }
 
         pub fn build(&self) -> Result<Note, IncompleteNote>
@@ -264,21 +306,7 @@ pub mod Note{
         let x = arg.split(":");
         for i in x
         {
-            match i{
-                    "C" => {ret_val.push(NotePitch::C)},
-                    "CS" => {ret_val.push(NotePitch::CSharp)},
-                    "D" => {ret_val.push(NotePitch::D)},
-                    "DS" => {ret_val.push(NotePitch::DSharp)},
-                    "E" => {ret_val.push(NotePitch::E)},
-                    "F" => {ret_val.push(NotePitch::F)},
-                    "FS" => {ret_val.push(NotePitch::FSharp)},
-                    "G" => {ret_val.push(NotePitch::G)},
-                    "GS" => {ret_val.push(NotePitch::GSharp)},
-                    "A" => {ret_val.push(NotePitch::A)},
-                    "AS" => {ret_val.push(NotePitch::ASharp)},
-                    "B" => {ret_val.push(NotePitch::B)},
-                    _ => {},
-            }
+            
         }
         ret_val
     }

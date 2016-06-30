@@ -13,17 +13,17 @@ use partialsequencer::PartialSequencer;
 use std::thread;
 
 fn main() {
-    let internal_beat = BeatValue::from_bpm(130.0);
+    let internal_beat = BeatValue::from_bpm(126.0);
 
     let mut children = vec![];
 
 
     children.push(thread::spawn(move || {
     let mut nb_seq1 = Note::NoteBuilder::new();
-    nb_seq1 = nb_seq1.length(internal_beat.u64_from_beats(8, 16).unwrap() as u32);
-    let sequence = Note::build_sequence("E:E:D:A:E:E:D:A:E:E:D:A:E:E:D:A");
-    let mut sampler = InstrumentWrapper::InstrumentWrapper::new(TestPlugin::TestSampler::from_audio("../debug/pianoc.aiff").unwrap());
-    sampler.reveal_internal_instrument().change_pitch(0.28);
+    nb_seq1 = nb_seq1.length(internal_beat.u64_from_beats(16, 128).unwrap() as u32);
+    let sequence = Note::build_sequence("A:A:A:A:A:A:A:A:A:A:A:A:A:A:A:A");
+    let mut sampler = InstrumentWrapper::InstrumentWrapper::new(TestPlugin::TestSampler::from_audio("../debug/sampe4.wav").unwrap());
+    sampler.reveal_internal_instrument().change_pitch(0.19);
     let note_sequence : Vec<Note::Note>= sequence.into_iter().map(|x|{
         nb_seq1.set_note(x);
         nb_seq1.safe_build()
