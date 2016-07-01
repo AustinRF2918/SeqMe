@@ -1,6 +1,9 @@
+//Must be refactored. To hard to generate beats and timings
+//and que points and stuff...
+
 pub mod Beat
 {
-    use timing::Timing;
+    use sequencing::timing::timing::Timing;
 
     #[derive(Copy, Clone, Hash, PartialEq, Eq)]
     pub struct BeatValue
@@ -34,7 +37,7 @@ pub mod Beat
             {
                 Some(x) =>
                 {
-                    Some(x / prec * beats)
+                    Some((x / prec ) * beats)
                 }
                 None =>
                 {

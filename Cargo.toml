@@ -6,3 +6,4 @@ authors = ["Austin Fell <austinrf2918@yahoo.com>"]
 [dependencies]
 ears = "*"
 schedule_recv = "*"
+timer = "*"

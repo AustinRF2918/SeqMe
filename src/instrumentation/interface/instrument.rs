@@ -1,17 +1,19 @@
 pub mod Instrument
 {
-    use note::Note;
+    use sequencing::tonation::note::NoteCollections::RawNote;
 
     pub trait PlayableInstrument
     {
-        fn play(&mut self, &Note::Note);
+        fn play(&mut self, &RawNote);
     }
 }
 
+
 pub mod InstrumentWrapper
 {
-    use note::Note;
-    use instrument::Instrument;
+    use sequencing::tonation::note::NoteCollections::RawNote;
+    use instrumentation::interface::instrument::Instrument;
+    use std::thread;
     
     ///T represents an implemented instrument that has the play
     ///function: The play function returns an Option<???> which
@@ -37,7 +39,7 @@ pub mod InstrumentWrapper
         ///not been implemented for this particular instrument.
         ///Reimplement as similar result to playable instrument at
         ///later point.
-        pub fn play(&mut self, note: &Note::Note) 
+        pub fn play(&mut self, note: &RawNote) 
         {
             self.internal_instrument.play(note);
             //if blah blah returned a none value, panic.
@@ -45,14 +47,15 @@ pub mod InstrumentWrapper
 
         ///Safe play returns no value and handles an improper play
         ///argument by doing nothing.
-        pub fn safe_play(&mut self, note: &Note::Note) -> bool
+        pub fn safe_play(&mut self, note: &RawNote) -> bool
         {
             self.internal_instrument.play(note);
             //if blah blah returns none value, false, else...
             true
         }
 
-        pub fn reveal_internal_instrument(&mut self) -> &mut T
+        //For debug uses only
+        pub fn reveal_internal_instrument_DEBUG(&mut self) -> &mut T
         {
             &mut self.internal_instrument
         }
@@ -61,12 +64,11 @@ pub mod InstrumentWrapper
 
 pub mod TestPlugin
 {
-    use std::thread;
-    use note::Note;
-    use instrument::Instrument;
+    use sequencing::tonation::note::NoteCollections::RawNote;
+    use instrumentation::interface::instrument::Instrument;
     use ears::{Sound, AudioController};
     use schedule_recv::oneshot_ms;
-    use std::sync::Mutex;
+    use std::thread;
 
     pub struct TestSampler
     {
@@ -77,8 +79,13 @@ pub mod TestPlugin
 
     impl Instrument::PlayableInstrument for TestSampler
     {
-        fn play(&mut self, note: &Note::Note)
+        fn play(&mut self, note: &RawNote)
         {
+            if self.internal_audio.is_playing()
+            {
+                self.internal_audio.set_position([0f32, 0f32, 0f32]);
+            }
+
             if self.cache != note.pitch_hz * 0.0015 * 8.0 * self.audio_scaler
             {
                 self.internal_audio.set_pitch(note.pitch_hz * 0.0015 * 8.0 * self.audio_scaler);
@@ -110,13 +117,9 @@ pub mod TestPlugin
             }
         }
 
-        fn play_core(&mut self, note: &Note::Note)
+        fn play_core(&mut self, note: &RawNote)
         {
-            let local_timer = oneshot_ms(note.length.unwrap());
-            if self.internal_audio.is_playing()
-            {
-                self.internal_audio.set_position([0f32, 0f32, 0f32]);
-            }
+            let local_timer = oneshot_ms(note.length);
             self.internal_audio.play();
             local_timer.recv().unwrap();
             self.internal_audio.stop();
