@@ -110,7 +110,7 @@ pub mod NotePrimitives
     }
 }
 
-///NoteGeneration: This module which dervices from Note directly acts
+///NoteGeneration: This module which derives from Note directly acts
 ///as a generate facility for notes that allows us to easily create
 ///return note objects.
 pub mod NoteGeneration

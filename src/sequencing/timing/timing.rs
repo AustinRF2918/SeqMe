@@ -1,23 +1,64 @@
-//Must be refactored. To hard to generate beats and timings
-//and que points and stuff...
+///Primitive values for beats: this includes information regarding
+///relative timing of a beat: that being, for example, 16ths, 8ths,
+///etc. This will also be used at a later point in conjunction with
+///beat for using weird time signatures (3/4, etc)
+pub mod BeatPrimitives {
+    ///Division: Simple divisior based on common note divisions.
+    ///Note that this also includes the ability to multiply notes
+    ///into spanning times (4 quarternotes = full note)
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+    pub enum Division {
+        Whole(u32),
+        Half(u32),
+        Quarter(u32),
+        Eighth(u32),
+        Sixteenth(u32),
+        ThirtySecond(u32),
+        SixtyFourth(u32),
+        OneHundredTwentyEighth(u32),
+        TwoHundredFiftySixth(u32),
+    }
+
+    ///division_from_str(s: &str, r: u32) -> Option<BeatPrimitives::Division>: Easy
+    ///way to generate a duration of time from a string and a u32. s should be a
+    ///number 1 / 2^n up to 256.
+    pub fn division_from_str(s: &str, r: u32) -> Option<Division> {
+        match s {
+            "1" => Some(Division::Whole(r)),
+            "1/2" => Some(Division::Half(r)),
+            "1/4" => Some(Division::Quarter(r)),
+            "1/8" => Some(Division::Eighth(r)),
+            "1/16" => Some(Division::Sixteenth(r)),
+            "1/32" => Some(Division::ThirtySecond(r)),
+            "1/64" => Some(Division::SixtyFourth(r)),
+            "1/128" => Some(Division::OneHundredTwentyEighth(r)),
+            "1/256" => Some(Division::TwoHundredFiftySixth(r)),
+            _ => None,
+        }
+    }
+}
+
+///BeatGeneration: This module which derives from BeatPrimitive directly acts
+///as a generation facility for beats that allows us to easily use a builder
+///pattern for building actual beats.
+pub mod BeatGeneration {
+}
 
 pub mod Beat
 {
-    use sequencing::timing::timing::Timing;
+    use std::time::Duration;
 
     #[derive(Copy, Clone, Hash, PartialEq, Eq)]
-    pub struct BeatValue
+    pub struct BeatPrimitive
     {
-        time_per_bar: Timing::Time,
+        duration_per_bar: Duration,
     }
 
     impl BeatValue
     {
-        pub fn new(time: Timing::Time) -> BeatValue
-        {
-            BeatValue
-            {
-                time_per_bar: time,
+        pub fn from_ms(time: Duration) -> BeatValue {
+            BeatValue {
+            duration_per_bar: time;
             }
         }
 
@@ -46,179 +87,4 @@ pub mod Beat
             }
         }
     }
-}
-
-pub mod Timing
-{
-    macro_rules! setter{
-        ($( $name: ident), *) => (
-            $(
-                pub fn $name(mut self, $name: u16) -> TimeBuilder
-                {
-                    self.internal_timer.$name = Some($name);
-                    println!("{:?}", self.internal_timer.$name);
-                    self
-                }
-            )*
-        )
-    }
-
-    #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
-    pub struct Time
-    {
-        pub h: Option<u16>,
-        pub m: Option<u16>,
-        pub s: Option<u16>,
-        pub ms: Option<u16>,
-    }
-
-    enum TimeValue
-    {
-        Complete(Time),
-        Incomplete(Time),
-    }
-
-    impl Time
-    {
-        pub fn as_ms(&self) -> Option<u64>
-        {
-            match (self.h, self.m, self.s, self.ms)
-            {
-                (Some(h_value), Some(m_value), Some(s_value), Some(ms_value)) => {
-                    Some((h_value as u64 + m_value as u64 + s_value as u64 + ms_value as u64))
-                },
-                _ => {None},
-            }
-        }
-
-        fn new() -> Time
-        {
-            Time{
-              h: None,
-              m: None,
-              s: None,
-              ms: None,
-            }
-        }
-
-        pub fn from_ms(value: u64) -> Time
-        {
-            let ms = (value % 1000) as u16;
-            println!("MS2: {}", ms);
-            let mut qr = value / 1000;
-            let s = (qr % 60) as u16;
-            println!("S: {}", s);
-            qr = (qr % 60) / 60;
-            println!("qr: {}", qr);
-            let m = (qr % 60) as u16; 
-            println!("M: {}", m);
-            qr = (qr % 60) / 60;
-            println!("qr: {}", qr);
-            let h = (qr % 60) as u16;
-            println!("H: {}", h);
-
-            Time{
-              h: Some(h),
-              m: Some(m),
-              s: Some(s),
-              ms: Some(ms),
-            }
-        }
-
-        fn check_completion(&self) -> bool 
-        {
-            let h = self.h;
-            let m = self.h;
-            let s = self.h;
-            let ms = self.h;
-
-            match (h, m, s, ms)
-            {
-                (Some(_), Some(_), Some(_), Some(_)) => {true},
-                _ => {false},
-            }
-        }
-    }
-
-    #[derive(Debug)]
-    pub struct TimeBuilder
-    {
-        internal_timer: Time,
-    }
-
-    impl TimeBuilder
-    {
-        pub fn new() -> TimeBuilder
-        {
-            TimeBuilder
-            {
-                internal_timer: Time{
-                h: None,
-                m: None,
-                s: None,
-                ms: None,
-                }
-            }
-        }
-
-        pub fn build(&self) -> TimeValue
-        {
-            let timer = self.internal_timer;
-            match (timer.h, timer.m, timer.s, timer.ms)
-            {
-                (Some(_), Some(_), Some(_), Some(_)) => {
-                    TimeValue::Complete(self.internal_timer.clone())
-                }
-                _ => {
-                    TimeValue::Incomplete(self.internal_timer.clone())
-                }
-            }
-        }
-
-        pub fn safe_build(&self) -> Time
-        {
-            let mut h = self.internal_timer.h;
-            let mut m = self.internal_timer.m;
-            let mut s = self.internal_timer.s;
-            let mut ms = self.internal_timer.ms;
-
-            match h
-            {
-                Some(_) => {},
-                None => {h = Some(0)},
-            }
-
-            match m
-            {
-                Some(_) => {},
-                None => {m = Some(0)},
-            }
-
-            match s
-            {
-                Some(_) => {},
-                None => {s = Some(0)},
-            }
-
-            match ms 
-            {
-                Some(_) => {},
-                None => {ms = Some(0)},
-            }
-
-            Time
-            {
-                h: h,
-                m: m,
-                s: s,
-                ms: ms,
-            }
-        }
-
-        setter!(ms);
-        setter!(h);
-        setter!(m);
-        setter!(s);
-    }
-
 }
