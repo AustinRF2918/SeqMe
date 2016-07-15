@@ -42,6 +42,69 @@ pub mod BeatPrimitives {
 ///as a generation facility for beats that allows us to easily use a builder
 ///pattern for building actual beats.
 pub mod BeatGeneration {
+    use sequencing::timing::timing::BeatPrimitives::Division;
+    use sequencing::timing::timing::BeatPrimitives::division_from_str;
+
+    ///Setter macro that allows us to use a builder pattern to return a
+    ///object that has been modified from it's previous call with a
+    ///single attribute: think about JavaScript returning objects.
+    ///Takes $name and $typ, which is the name of the internal variable
+    ///and the type of the internal variable and generates said function.
+    macro_rules! setter {
+        ($( $name: ident, $typ: ty), *) => (
+            $(
+                pub fn $name(mut self, $name: $typ) -> NoteBuilder
+                {
+                    self.internal_note.$name = Some($name);
+                    self
+                }
+            )*
+        )
+    }
+
+    ///Clearer macro allows us to simply clear our BeatBuilder of
+    ///Cruft accumulated after building of an arbitrary note.
+    macro_rules! clearer {
+        ( $name: ident) => (
+            self.internal_note.$name = None;
+        );
+    }
+
+    ///BeatBuilder: This is an object that allows us to use builder style
+    ///construction of beat objects. Has multiple functions for maintaining
+    ///and creating beats.
+    #[derive(Clone, Copy, Debug)]
+    pub struct BeatBuilder {
+        internal_beat: IncompleteBeat;
+    }
+
+    impl BeatBuilder {
+        ///BeatBuilder::new(): Generates a new BeatBuilder object.
+        pub fn new() -> BeatBuilder {
+            BeatBuilder {
+                internal_beat: IncompleteBeat::new(),
+            }
+        }
+
+        ///BeatBuilder::clear(): Automatically clears all our
+        ///variables inside of our BeatBuilder to None so that we
+        ///can create a new, unique beat that we can use later.
+        pub fn clear(&mut self) {
+            self.internal_beat.whole = None;
+            self.internal_beat.half = None;
+            self.internal_beat.quarter = None;
+            self.internal_beat.eighth = None;
+            self.internal_beat.sixteenth = None;
+            self.internal_beat.thirty_second = None;
+            self.internal_beat.sixty_fourth = None;
+            self.internal_beat.one_hundred_twenty_eighth = None;
+            self.internal_beat.two_hundred_fifty_sixth = None;
+        }
+
+        pub fn build(&mut self) -> BeatResult {
+            
+        }
+    }
 }
 
 pub mod Beat
