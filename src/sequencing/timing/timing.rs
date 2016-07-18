@@ -44,6 +44,8 @@ pub mod BeatPrimitives {
 pub mod BeatGeneration {
     use sequencing::timing::timing::BeatPrimitives::Division;
     use sequencing::timing::timing::BeatPrimitives::division_from_str;
+    use sequencing::timing::timing::BeatCollections::IncompleteBeat;
+    use sequencing::timing::timing::BeatCollections::BeatResult;
 
     ///Setter macro that allows us to use a builder pattern to return a
     ///object that has been modified from it's previous call with a
@@ -75,7 +77,7 @@ pub mod BeatGeneration {
     ///and creating beats.
     #[derive(Clone, Copy, Debug)]
     pub struct BeatBuilder {
-        internal_beat: IncompleteBeat;
+        internal_beat: IncompleteBeat,
     }
 
     impl BeatBuilder {
@@ -105,6 +107,111 @@ pub mod BeatGeneration {
             
         }
     }
+}
+
+pub mod BeatCollections {
+    use sequencing::timing::timing::BeatPrimitives;
+    use std::collections::LinkedList;
+
+    pub enum BeatResult {
+        Complete(RawBeat),
+        Incomplete(IncompleteBeat),
+    }
+
+    ///BeatCollections::RawBeat: A data structure that utilizes a stack (linked list)
+    ///to represent a group of rhythmic elements: for example we can have multiple wholes
+    ///with multiple repeats, etc. We can then call total beats and based on a general
+    ///time generate said beats length.
+    #[derive(Debug)]
+    pub struct RawBeat {
+        pub beat_stack: LinkedList<BeatPrimitives::Division>,
+    }
+
+    impl RawBeat {
+        pub fn new() -> RawBeat {
+            RawBeat {
+                beat_stack: LinkedList::new(),
+            }
+        }
+    }
+
+    #[derive(Debug, Copy, Clone)]
+    pub struct IncompleteBeat {
+        pub whole: Option<BeatPrimitives::Division>,
+        pub half: Option<BeatPrimitives::Division>,
+        pub quarter: Option<BeatPrimitives::Division>,
+        pub eighth: Option<BeatPrimitives::Division>,
+        pub sixteenth: Option<BeatPrimitives::Division>,
+        pub thirty_second: Option<BeatPrimitives::Division>,
+        pub sixty_fourth: Option<BeatPrimitives::Division>,
+        pub one_hundred_twenty_eighth: Option<BeatPrimitives::Division>,
+        pub two_hundred_fifty_sixth: Option<BeatPrimitives::Division>,
+    }
+
+    impl IncompleteBeat {
+        pub fn new() -> IncompleteBeat {
+            IncompleteBeat {
+                whole: None,
+                half: None,
+                quarter: None,
+                eighth: None,
+                sixteenth: None,
+                thirty_second: None,
+                sixty_fourth: None,
+                one_hundred_twenty_eighth: None,
+                two_hundred_fifty_sixth: None,
+            }
+        }
+
+        fn iterable_fields(&self) -> Vec<&Option<BeatPrimitives::Division>> {
+            vec![&self.whole, &self.half, &self.quarter, &self.eighth,
+                 &self.sixteenth, &self.thirty_second, &self.sixty_fourth,
+                 &self.one_hundred_twenty_eighth, &self.two_hundred_fifty_sixth]
+
+        }
+
+        pub fn to_raw(&self) -> Option<RawBeat> {
+            }
+            else {
+            }
+        }
+
+        //TODO: Implement add for BeatPrimitives::Division so we can check
+        //if a value already exists within the desired beat primitive: if it
+        //does, then we can actually ADD what we are pushing into our primitive.
+        pub fn push_division(&mut self, division: BeatPrimitives::Division) {
+            match division {
+                BeatPrimitives::Division::Whole(num) => {
+                    self.whole = Some(division);
+                },
+                BeatPrimitives::Division::Half(num) => {
+                    self.half = Some(division);
+                },
+                BeatPrimitives::Division::Quarter(num) => {
+                    self.quarter = Some(division);
+                },
+                BeatPrimitives::Division::Eighth(num) => {
+                    self.eighth = Some(division);
+                },
+                BeatPrimitives::Division::Sixteenth(num) => {
+                    self.sixteenth = Some(division);
+                },
+                BeatPrimitives::Division::ThirtySecond(num) => {
+                    self.thirty_second = Some(division);
+                },
+                BeatPrimitives::Division::SixtyFourth(num) => {
+                    self.sixty_fourth = Some(division);
+                },
+                BeatPrimitives::Division::OneHundredTwentyEighth(num) => {
+                    self.one_hundred_twenty_eighth = Some(division);
+                },
+                BeatPrimitives::Division::TwoHundredFiftySixth(num) => {
+                    self.two_hundred_fifty_sixth = Some(division);
+                },
+            }
+        }
+    }
+
 }
 
 pub mod Beat
