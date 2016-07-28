@@ -36,6 +36,9 @@ pub mod BeatPrimitives {
             _ => None,
         }
     }
+
+
+    ///To implement: to f64 value...
 }
 
 ///BeatGeneration: This module which derives from BeatPrimitive directly acts
@@ -113,6 +116,9 @@ pub mod BeatCollections {
     use sequencing::timing::timing::BeatPrimitives;
     use std::collections::LinkedList;
 
+    ///BeatCollections::BeatResult: An algebraic data structure that wraps a BeatCollections::RawBeat
+    ///or BeatCollections::IncompleteBeat in a result like type that can be used to pattern match
+    ///in the case a beat fails to build properly.
     pub enum BeatResult {
         Complete(RawBeat),
         Incomplete(IncompleteBeat),
@@ -122,16 +128,39 @@ pub mod BeatCollections {
     ///to represent a group of rhythmic elements: for example we can have multiple wholes
     ///with multiple repeats, etc. We can then call total beats and based on a general
     ///time generate said beats length.
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     pub struct RawBeat {
         pub beat_stack: LinkedList<BeatPrimitives::Division>,
     }
 
     impl RawBeat {
+        ///BeatCollections::RawBeat::new(): Simple constructure that creates
+        ///a raw beat which is basically a container class with extra methods for
+        ///BeatPrimitives
         pub fn new() -> RawBeat {
             RawBeat {
                 beat_stack: LinkedList::new(),
             }
+        }
+
+        ///BeatCollections::RawBeat::push_beat(&mut self, beat: BeatPrimitives::Division):
+        ///Simple stack like push method.
+        pub fn push_beat(&mut self, beat: BeatPrimitives::Division) {
+            self.beat_stack.push_back(beat);
+        }
+
+        ///BeatCollections::RawBeat::pop_beat(&mut self):
+        ///Simple stack like pop method.
+        pub fn pop_beat(&mut self) -> Option<BeatPrimitives::Division> {
+            self.beat_stack.pop_back()
+        }
+
+        ///BeatCollections::RawBeat::total_time(&self):
+        ///Returns the total amount of time that all of the beat
+        ///primitives will add up to.
+        pub fn total_time(&self) -> i32 {
+            self.beat_stack.iter().fold(0, |x, y| {
+            })
         }
     }
 
@@ -171,9 +200,6 @@ pub mod BeatCollections {
         }
 
         pub fn to_raw(&self) -> Option<RawBeat> {
-            }
-            else {
-            }
         }
 
         //TODO: Implement add for BeatPrimitives::Division so we can check
@@ -210,8 +236,6 @@ pub mod BeatCollections {
                 },
             }
         }
-    }
-
 }
 
 pub mod Beat
